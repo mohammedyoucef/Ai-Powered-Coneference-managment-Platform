@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Confexa
+
+AI-powered academic conference management platform (in progress). This repository currently contains the initialized project shell only.
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/) 16 (App Router)
+- [React](https://react.dev/) 19
+- [TypeScript](https://www.typescriptlang.org/) (strict)
+- [Tailwind CSS](https://tailwindcss.com/) v4
+- [shadcn/ui](https://ui.shadcn.com/) (neutral, CSS variables)
+- [Supabase](https://supabase.com/) (prepared, not yet integrated)
+- [ESLint](https://eslint.org/)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18.18+ or 20+ (recommended)
+- npm
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in values as needed:
+
+```bash
+cp .env.example .env.local
+```
+
+The app does not require API keys to run in its current state.
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+### Start Production Server
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Linting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+```
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/              # App Router routes and layouts
+├── components/       # UI components (including shadcn/ui)
+│   └── layout/       # App shell (header/nav/footer)
+└── lib/              # Utilities
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Routes included (placeholders):
+- `/` - Landing page
+- `/dashboard` - Dashboard
+- `/conferences` - Conferences list
+- `/conferences/new` - Conference creation
+- `/submissions` - Paper submissions
+- `/review` - AI review
+- `/settings` - Settings
+
+## Notes
+
+- Authentication and database operations are not implemented.
+- No secrets are hardcoded. Use `.env.local` for local configuration.
+- This is initialization only; future work will add features incrementally.
+- Do not commit `.env.local` or other secret-bearing files.
+
+## Deployment
+
+Deploy to any platform that supports Next.js (e.g., Vercel). Set environment variables via your platform's configuration.
