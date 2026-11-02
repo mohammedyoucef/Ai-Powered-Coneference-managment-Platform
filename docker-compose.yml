@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17
+    container_name: confexa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: confexa
+      POSTGRES_PASSWORD: confexa_dev_password
+      POSTGRES_DB: confexa
+    ports:
+      - "5432:5432"
+    volumes:
+      - confexa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U confexa -d confexa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  confexa_pgdata:

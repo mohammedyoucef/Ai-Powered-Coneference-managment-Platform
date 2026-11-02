@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/app-shell";
+import { SiteLayout } from "@/components/layout/site-layout";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Confexa — AI-Powered Conference Management",
+  title: "Confexa — Conference Management Platform",
   description:
-    "A polished international academic SaaS platform for managing conferences, submissions, and peer review.",
+    "Manage conferences, submissions, and peer review in one place.",
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} antialiased`}>
       <body className="min-h-screen font-sans">
-        <AppShell>{children}</AppShell>
+        <SiteLayout>{children}</SiteLayout>
       </body>
     </html>
   );

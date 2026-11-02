@@ -136,7 +136,10 @@ create policy "Users can update own profile" on public.profiles
 -- organizations policies
 drop policy if exists "Members can view their organizations" on public.organizations;
 create policy "Members can view their organizations" on public.organizations
-  for select using (public.is_org_member(id));
+  for select using (
+    created_by = auth.uid()
+    or public.is_org_member(id)
+  );
 
 drop policy if exists "Authenticated users can create organizations" on public.organizations;
 create policy "Authenticated users can create organizations" on public.organizations
@@ -149,7 +152,7 @@ create policy "Owners/admins can update organizations" on public.organizations
 -- organization_members policies
 drop policy if exists "Members can view org members" on public.organization_members;
 create policy "Members can view org members" on public.organization_members
-  for select using (public.is_org_member(organization_id));
+  for select using (public.is_org_member(organization_id) or user_id = auth.uid());
 
 drop policy if exists "Owners/admins can manage members" on public.organization_members;
 create policy "Owners/admins can manage members" on public.organization_members

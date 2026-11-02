@@ -1,17 +1,13 @@
+import { ConferenceForm } from '@/components/conferences/conference-form'
+
 export default function NewConferencePage() {
   return (
-    <div className="flex flex-col gap-4">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Create Conference</h1>
-        <p className="text-sm text-muted-foreground">
-          Start building a new conference.
-        </p>
+    <div className="mx-auto max-w-3xl flex flex-col gap-6">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#111827]">Create conference</h1>
+        <p className="text-sm text-[#64748B]">Step 2 of the workflow: describe the event, save the draft, then generate its website.</p>
       </header>
-      <div className="rounded-lg border p-6">
-        <p className="text-sm text-muted-foreground">
-          This area is not implemented yet. AI-assisted creation will be added later.
-        </p>
-      </div>
+      <ConferenceForm />
     </div>
   )
 }

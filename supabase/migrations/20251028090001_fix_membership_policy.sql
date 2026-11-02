@@ -14,3 +14,8 @@ create policy "Creator can insert self as owner" on public.organization_members
       where m.organization_id = organization_id
     )
   );
+
+-- Allow users to view their own memberships (prevents recursion when discovering orgs)
+drop policy if exists "Users can view their own memberships" on public.organization_members;
+create policy "Users can view their own memberships" on public.organization_members
+  for select using (user_id = auth.uid());
