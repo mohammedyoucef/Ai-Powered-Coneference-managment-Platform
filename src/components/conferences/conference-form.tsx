@@ -130,8 +130,12 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
   const [maxFileSizeMb, setMaxFileSizeMb] = useState('10')
 
   const [directory, setDirectory] = useState<DirectoryUser[]>([])
+  const [orgMembers, setOrgMembers] = useState<any[]>([])
   const [selectedReviewers, setSelectedReviewers] = useState<string[]>([])
   const [created, setCreated] = useState<{ slug: string; orgSlug: string; inviteFailures: string[] } | null>(null)
+
+  const lockedOrg = lockedOrgSlug ? orgs.find((o) => o.slug === lockedOrgSlug) : undefined
+  const selectedOrg = lockedOrg ?? orgs.find((o) => o.id === orgId) ?? orgs[0]
 
   useEffect(() => {
     fetch('/api/users/directory', { cache: 'no-store' })
@@ -139,6 +143,14 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
       .then((d) => setDirectory(Array.isArray(d.users) ? d.users : []))
       .catch(() => setDirectory([]))
   }, [])
+
+  useEffect(() => {
+    if (!selectedOrg?.id) return
+    fetch(`/api/organizations/${selectedOrg.id}/members`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : { members: [] }))
+      .then((d) => setOrgMembers(Array.isArray(d.members) ? d.members : []))
+      .catch(() => setOrgMembers([]))
+  }, [selectedOrg?.id])
 
   const [stepErrors, setStepErrors] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -202,9 +214,6 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
     }
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft)) } catch { /* ignore */ }
   }, [step, orgId, slugTouched, title, slug, category, conferenceType, shortDesc, fullDesc, startDate, endDate, submissionDeadline, cameraReadyDeadline, venueOrFormat, city, country, language, contactEmail, visibility, primaryColor, accentColor, logoUrl, coverImageUrl, topics, submissionTypes, guidelines, reviewMethod, reviewCriteria])
-
-  const lockedOrg = lockedOrgSlug ? orgs.find((o) => o.slug === lockedOrgSlug) : undefined
-  const selectedOrg = lockedOrg ?? orgs.find((o) => o.id === orgId) ?? orgs[0]
 
   function discardDraft() {
     try { window.localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
@@ -510,7 +519,17 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
               </div>
               <div className="flex flex-col gap-2">
                 <label htmlFor="conferenceType" className={labelCls}>Conference type</label>
-                <input id="conferenceType" value={conferenceType} onChange={(e) => setConferenceType(e.target.value)} className={inputCls} placeholder="Conference, Workshop, Symposium, Summit..." />
+                <select id="conferenceType" value={conferenceType} onChange={(e) => setConferenceType(e.target.value)} className={inputCls}>
+                  <option value="">Select type</option>
+                  <option value="Conference">Conference</option>
+                  <option value="Workshop">Workshop</option>
+                  <option value="Symposium">Symposium</option>
+                  <option value="Summit">Summit</option>
+                  <option value="Colloquium">Colloquium</option>
+                  <option value="Congress">Congress</option>
+                  <option value="Seminar">Seminar</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div className="flex flex-col gap-2 sm:col-span-2">
                 <label htmlFor="shortDesc" className={labelCls}>Short description{gen('short')}</label>
@@ -544,7 +563,13 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="venue" className={labelCls}>Venue / format{gen('venue')}</label>
-              <input id="venue" value={venueOrFormat} onChange={(e) => setVenueOrFormat(e.target.value)} placeholder="Hybrid / In-person / Online" className={inputCls} />
+              <select id="venue" value={venueOrFormat} onChange={(e) => setVenueOrFormat(e.target.value)} className={inputCls}>
+                <option value="">Select format</option>
+                <option value="In-person">In-person</option>
+                <option value="Online">Online</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Virtual">Virtual</option>
+              </select>
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="visibility" className={labelCls}>Visibility</label>
@@ -611,6 +636,32 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="submissionTypes" className={labelCls}>Submission types (comma separated)</label>
+              <select
+                id="submissionTypesSelect"
+                className={inputCls}
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (!v) return
+                  const current = submissionTypes
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                  if (!current.includes(v)) {
+                    setSubmissionTypes([...current, v].join(', '))
+                  }
+                  e.target.value = ''
+                }}
+              >
+                <option value="">Add submission type</option>
+                <option value="Full paper">Full paper</option>
+                <option value="Short paper">Short paper</option>
+                <option value="Abstract">Abstract</option>
+                <option value="Poster">Poster</option>
+                <option value="Demo">Demo</option>
+                <option value="Workshop paper">Workshop paper</option>
+                <option value="Extended abstract">Extended abstract</option>
+                <option value="Panel proposal">Panel proposal</option>
+              </select>
               <input id="submissionTypes" value={submissionTypes} onChange={(e) => setSubmissionTypes(e.target.value)} placeholder="Full paper, Short paper, Poster, Demo" className={inputCls} />
             </div>
             <div className="flex flex-col gap-2">
@@ -640,27 +691,32 @@ export function ConferenceForm({ lockedOrgSlug }: { lockedOrgSlug?: string }) {
             </div>
             <div className="flex flex-col gap-2 border-t pt-4">
               <span className={labelCls}>Select reviewers for this event (registered Reviewer accounts)</span>
-              <p className="text-xs text-gray-500">They receive an invitation for this event only when you create it. You can also select reviewers later from the conference dashboard (Participants).</p>
-              {directory.filter((u) => u.accountType === 'reviewer').length === 0 ? (
-                <p className="text-sm text-gray-500">No registered Reviewer accounts yet. Reviewers appear here once they register on Confexa.</p>
-              ) : (
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {directory.filter((u) => u.accountType === 'reviewer').map((u) => (
-                    <label key={u.id} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={selectedReviewers.includes(u.id)}
-                        onChange={(e) => setSelectedReviewers((prev) => (e.target.checked ? [...prev, u.id] : prev.filter((id) => id !== u.id)))}
-                      />
-                      <Avatar name={u.displayName} url={u.avatarUrl} size={32} />
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium text-gray-900">{u.displayName}</span>
-                        <span className="block truncate text-xs text-gray-500">{u.affiliation || u.email}{u.expertise?.length ? ` · ${u.expertise.slice(0, 2).join(', ')}` : ''}</span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
+              <p className="text-xs text-gray-500">Only reviewers who are members of this organization appear below. To invite reviewers from outside your organization, use their email (must be the same email they registered with on Confexa).</p>
+              {(() => {
+                const memberIds = new Set(orgMembers.map((m: any) => String(m.userId || m.user_id)))
+                const orgReviewers = directory.filter((u) => u.accountType === 'reviewer' && memberIds.has(u.id))
+                if (orgReviewers.length === 0) {
+                  return <p className="text-sm text-gray-500">No reviewers from this organization are registered yet. Add reviewers to your organization or invite them by email from the Participants page.</p>
+                }
+                return (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {orgReviewers.map((u) => (
+                      <label key={u.id} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={selectedReviewers.includes(u.id)}
+                          onChange={(e) => setSelectedReviewers((prev) => (e.target.checked ? [...prev, u.id] : prev.filter((id) => id !== u.id)))}
+                        />
+                        <Avatar name={u.displayName} url={u.avatarUrl} size={32} />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-gray-900">{u.displayName}</span>
+                          <span className="block truncate text-xs text-gray-500">{u.affiliation || u.email}{u.expertise?.length ? ` · ${u.expertise.slice(0, 2).join(', ')}` : ''}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )
+              })()}
             </div>
             <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">

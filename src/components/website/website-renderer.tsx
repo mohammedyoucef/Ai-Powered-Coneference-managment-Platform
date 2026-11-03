@@ -753,36 +753,32 @@ function SiteNav({ config, sections, design: designProp, seedId, cta }: { config
 }
 
 /** AI-authored page: the model wrote the whole document. Rendered in a
- * script-blocked sandboxed iframe (see below for why allow-same-origin is
- * present). Link targets are repaired by sanitizeAiHtml so app links
- * navigate the top page (target="_top") and external links open a new tab. */
-export function AiCustomFrame({ html, title, submitPath, submitHref, attendHref }: { html: string; title?: string; submitPath?: string; submitHref?: string; attendHref?: string }) {
-  // Repair links at render time too, so pages generated before the link
-  // repair existed (stored in the database) get working CTAs without
-  // needing to be regenerated.
+ * script-blocked sandboxed iframe. Link targets are repaired by sanitizeAiHtml
+ * so app links navigate the top page (target="_top") and external links open a new tab. */
+export function AiCustomFrame({ html, title, submitPath, submitHref, attendHref, eventDates }: { html: string; title?: string; submitPath?: string; submitHref?: string; attendHref?: string; eventDates?: WebsiteEventDates }) {
   const repaired = repairLinks(html, submitPath, { submitHref, attendHref })
-  // Two frame behaviours broke header buttons, both fixed here:
-  // 1. A srcDoc frame resolves #anchor links against the PARENT page URL, so
-  //    clicking "Topics" loaded the whole site inside the frame. A blob: URL
-  //    makes fragment links same-document.
-  // 2. A sandboxed frame without allow-same-origin cannot perform even
-  //    same-document fragment navigation in Chromium (verified: the click
-  //    was a no-op). allow-same-origin re-enables anchor scrolling while
-  //    scripts remain blocked (no allow-scripts token, all script content
-  //    stripped by the sanitizer, CSP default-src 'none'), so the page
-  //    still cannot execute code or reach the parent DOM.
+  const withCountdown = (() => {
+    try {
+      const deadline = eventDates?.submissionDeadline ? `${eventDates.submissionDeadline}T23:59:59` : ''
+      const start = eventDates?.startDate ? `${eventDates.startDate}T09:00:00` : ''
+      const script = `<script>(function(){function run(){try{var d='${deadline}';var s='${start}';var els=document.querySelectorAll('[data-countdown],[data-timer],.countdown,#countdown,#timer');if(!els.length)return;var target=0;var label='';var dd=new Date(d).getTime();var ss=new Date(s).getTime();var now=Date.now();if(!isNaN(dd)&&dd>now){target=dd;label='Submissions close in';}else if(!isNaN(ss)&&ss>now){target=ss;label='Conference starts in';}else{return;}var lbl=document.querySelector('[data-countdown-label],[data-timer-label],.countdown-label');if(lbl&&label)lbl.textContent=label;function upd(){var diff=Math.max(0,target-Date.now());var days=Math.floor(diff/86400000),hrs=Math.floor(diff/3600000)%24,min=Math.floor(diff/60000)%60,sec=Math.floor(diff/1000)%60;var map={days:days,day:days,hours:hrs,hour:hrs,minutes:min,min:min,seconds:sec,sec:sec};els.forEach(function(el){el.querySelectorAll('[data-cd],.cd-unit,[data-unit]').forEach(function(u){var k=(u.getAttribute('data-cd')||u.getAttribute('data-unit')||'').toLowerCase();if(map.hasOwnProperty(k)){u.textContent=(map[k]<10?'0':'')+map[k];}});var ds=el.querySelector('.cd-days,.days');if(ds)ds.textContent=days;var hs=el.querySelector('.cd-hours,.hours');if(hs)hs.textContent=(hrs<10?'0':'')+hrs;var ms=el.querySelector('.cd-minutes,.minutes');if(ms)ms.textContent=(min<10?'0':'')+min;var ss2=el.querySelector('.cd-seconds,.seconds');if(ss2)ss2.textContent=(sec<10?'0':'')+sec;});}upd();setInterval(upd,1000);}catch(e){}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',run);}else{run();})();</script>`
+      if (repaired.includes('</body>')) return repaired.replace('</body>', script + '</body>')
+      return repaired + script
+    } catch {
+      return repaired
+    }
+  })()
   const [blobSrc, setBlobSrc] = useState<string | null>(null)
   useEffect(() => {
-    const url = URL.createObjectURL(new Blob([repaired], { type: 'text/html' }))
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- blob URL must be created client-side after mount
+    const url = URL.createObjectURL(new Blob([withCountdown], { type: 'text/html' }))
     setBlobSrc(url)
     return () => URL.revokeObjectURL(url)
-  }, [repaired])
+  }, [withCountdown])
   return (
     <iframe
-      title={title || 'AI-designed conference page'}
+      title={title || 'Conference page'}
       src={blobSrc ?? undefined}
-      srcDoc={blobSrc ? undefined : repaired}
+      srcDoc={blobSrc ? undefined : withCountdown}
       sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
       className="block w-full border-0 bg-white"
       style={{ height: '100vh', minHeight: 720 }}
@@ -805,7 +801,7 @@ export function WebsiteRenderer({ config, conferenceSlug, organizationName, even
     attend: attendHref || `/events/${conferenceSlug}/attend`,
   }
   if (config.generationMode === 'ai-page' && config.customHtml) {
-    return <AiCustomFrame html={config.customHtml} title={config.metadata?.title} submitPath={`/events/${conferenceSlug}/submit`} submitHref={cta.submit} attendHref={cta.attend} />
+    return <AiCustomFrame html={config.customHtml} title={config.metadata?.title} submitPath={`/events/${conferenceSlug}/submit`} submitHref={cta.submit} attendHref={cta.attend} eventDates={eventDates} />
   }
   // Old published configs carry the untouched default theme design, which
   // is why they all looked identical. When the stored design is exactly a

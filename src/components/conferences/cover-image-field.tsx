@@ -38,7 +38,7 @@ export function CoverImageField({ value, onChange, title, topics }: {
         method: 'POST',
         headers: getAIRequestHeaders(),
         body: JSON.stringify({
-          prompt: `Create a high-quality wide 16:9 cover image with NO text or words for an academic conference event card. Conference: "${title || 'Academic conference'}". Subjects/topics: ${topics || 'research, university, science'}. Professional, visually distinctive, suitable as a listing cover photo.`,
+          prompt: `Generate a modern, cinematic 16:9 YouTube-thumbnail style cover image for an academic conference listing card. Conference title context: "${title || 'Academic conference'}". Research topics: ${topics || 'research, innovation, science'}. Use a clean, professional design with abstract geometric shapes, subtle gradients, or relevant academic imagery. NO text, NO letters, NO logos, NO watermarks, NO people faces with text. Photographic or minimal flat illustration, high contrast, eye-catching but elegant. Aspect ratio landscape 16:9.`,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -65,9 +65,9 @@ export function CoverImageField({ value, onChange, title, topics }: {
       <span className="text-sm font-medium text-gray-700">Event cover image (shown on Events cards)</span>
       {value ? (
         // eslint-disable-next-line @next/next/no-img-element -- user-provided/data-URL cover
-        <img src={value} alt="Event cover" className="h-40 w-full rounded-lg border object-cover" />
+        <img src={value} alt="Event cover" className="aspect-video w-full rounded-lg border object-cover" />
       ) : (
-        <div className="flex h-40 w-full items-center justify-center rounded-lg border bg-gradient-to-br from-[#4F46E5] to-violet-600 px-4 text-center text-sm font-medium text-white">
+        <div className="flex aspect-video w-full items-center justify-center rounded-lg border bg-gradient-to-br from-[#4F46E5] to-violet-600 px-4 text-center text-sm font-medium text-white">
           No cover yet — upload one or generate it with AI.
         </div>
       )}

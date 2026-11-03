@@ -118,32 +118,52 @@ export function repairLinks(html: string, submitPath?: string, overrides?: { sub
   let out = html
   if (submitPath) {
     out = out.replace(/SUBMIT_URL|\{\{\s*submit[_ ]?url\s*\}\}|\[submit[_ ]?url\]/gi, submitPath)
+    out = out.replace(/ATTEND_URL|\{\{\s*attend[_ ]?url\s*\}\}|\[attend[_ ]?url\]/gi, submitPath.replace(/\/submit$/, '/attend'))
+    out = out.replace(/REGISTER_URL|\{\{\s*register[_ ]?url\s*\}\}|\[register[_ ]?url\]/gi, submitPath.replace(/\/submit$/, '/attend'))
   }
   out = repairAiAnchors(out)
   const knownIds = new Set([...out.matchAll(/\bid\s*=\s*(?:"([^"]+)"|'([^']+)')/gi)].map((m) => m[1] ?? m[2]))
+  out = out.replace(/<button\b([^>]*)>([\s\S]*?)<\/button\s*>/gi, (whole, attrs: string, inner: string) => {
+    const text = inner.replace(/<[^>]+>/g, ' ').toLowerCase()
+    let href = '#'
+    if (submitPath) {
+      if (/submit|paper|manuscript|cfp|call for paper/.test(text) && !/attend|register/.test(text)) href = submitPath
+      else if (/attend|register|join|apply to attend/.test(text)) href = submitPath.replace(/\/submit$/, '/attend')
+    }
+    if (submitPath && overrides?.submitHref && /submit|paper|manuscript|cfp/.test(text) && !/attend|register/.test(text)) href = overrides.submitHref
+    if (submitPath && overrides?.attendHref && /attend|register|join|apply to attend/.test(text)) href = overrides.attendHref
+    let rest = attrs.replace(/\s+/g, ' ').trim()
+    const isExternal = /^https?:\/\//i.test(href)
+    const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : href.startsWith('#') ? '' : ' target="_top"'
+    if (href === '#') return `<span>${inner}</span>`
+    return `<a ${rest ? `${rest} ` : ''}href="${href.replace(/"/g, '%22')}"${target}>${inner}</a>`
+  })
   out = out.replace(/<a\b([^>]*)>([\s\S]*?)<\/a\s*>/gi, (whole, attrs: string, inner: string) => {
     const hrefMatch = attrs.match(/\bhref\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i)
     let href = (hrefMatch?.[2] ?? hrefMatch?.[3] ?? hrefMatch?.[4] ?? '').trim()
     const text = inner.replace(/<[^>]+>/g, ' ').toLowerCase()
-    if (submitPath && (href === '' || href === '#')) {
-      if (/submit|paper|manuscript/.test(text)) href = submitPath
-      else if (/attend|register|join/.test(text)) href = submitPath.replace(/\/submit$/, '/attend')
+    if (submitPath && (href === '' || href === '#' || href === 'about:blank' || href === 'about:blank#blocked')) {
+      if (/submit|paper|manuscript|cfp|call for paper/.test(text) && !/attend|register/.test(text)) href = submitPath
+      else if (/attend|register|join|apply to attend/.test(text)) href = submitPath.replace(/\/submit$/, '/attend')
+      else if (/location|venue|map|directions|get directions/.test(text)) href = '#location'
     }
-    // A pure registration/attendance CTA pointing at the paper form sends
-    // visitors to the wrong page; send it to the attendance form instead.
-    if (submitPath && href === submitPath && /attend|register/.test(text) && !/submit|paper/.test(text)) {
+    if (submitPath && href === submitPath && /attend|register|join|apply to attend/.test(text) && !/submit|paper|manuscript/.test(text)) {
       href = submitPath.replace(/\/submit$/, '/attend')
     }
-    // Account-aware targets supplied by the host page (e.g. a visitor is
-    // sent to register as a Researcher before submitting). Only exact
-    // submit/attend links are rewritten; in-page anchors are untouched.
-    if (submitPath && overrides?.submitHref && href === submitPath) href = overrides.submitHref
-    if (submitPath && overrides?.attendHref && href === submitPath.replace(/\/submit$/, '/attend')) href = overrides.attendHref
-    if (!href) return whole
+    if (submitPath && overrides?.submitHref && (/submit|paper|manuscript|cfp|call for paper/.test(text) && !/attend|register/.test(text))) href = overrides.submitHref
+    if (submitPath && overrides?.attendHref && /attend|register|join|apply to attend/.test(text)) href = overrides.attendHref
+    if (!href || href === 'about:blank' || href === 'about:blank#blocked') {
+      if (submitPath) {
+        if (/submit|paper|manuscript|cfp/.test(text) && !/attend|register/.test(text)) href = overrides?.submitHref || submitPath
+        else if (/attend|register|join/.test(text)) href = overrides?.attendHref || submitPath.replace(/\/submit$/, '/attend')
+        else href = '#'
+      } else {
+        href = '#'
+      }
+    }
     if (/^(javascript|vbscript):/i.test(href)) href = '#'
-    // Still-dead in-page anchor: not a working button. Keep the text as
-    // plain text instead of a link that does nothing when clicked.
     if (href.startsWith('#') && href.length > 1 && !knownIds.has(href.slice(1))) {
+      if (href === '#location') return `<a href="${href}" target="_top">${inner}</a>`
       return `<span>${inner}</span>`
     }
     let rest = attrs

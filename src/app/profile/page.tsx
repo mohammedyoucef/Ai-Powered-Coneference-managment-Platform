@@ -207,7 +207,7 @@ function AccountSection() {
       </div>
 
       <div className="rounded-lg border bg-slate-50 px-3 py-2 text-sm text-[#475569]">
-        Primary account type: <span className="font-medium text-[#111827]">{ACCOUNT_TYPE_META[accountType].label}</span> — fixed at registration so permissions cannot be changed from Profile.
+        Primary account type: <span className="font-medium text-[#111827]">{ACCOUNT_TYPE_META[accountType].label}</span>  fixed at registration so permissions cannot be changed from Profile.
         {user.profileCompleted ? null : <span className="block text-amber-700">Your profile is incomplete: add the required fields for your account type below.</span>}
       </div>
 
@@ -382,9 +382,6 @@ function AISettingsForm() {
         <h2 className="font-medium text-[#111827]">Meta model API</h2>
         <p className="text-sm text-[#64748B]">Connect your own Meta model key to enable real AI landing-page generation, natural-language edits, and content-based AI paper reviews. Without a key, a clearly labeled deterministic fallback is used.</p>
       </div>
-      <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-        Demo-grade storage: your key is kept only in this browser&apos;s localStorage and sent only to this app&apos;s own API routes, which forward it to Meta. It is never stored on a server. Prefer a key scoped for this purpose, and clear it on shared machines.
-      </div>
       <div className="flex flex-col gap-2">
         <label htmlFor="apiKey" className="text-sm font-medium">API key</label>
         <div className="flex gap-2">
@@ -418,7 +415,7 @@ function AISettingsForm() {
         <Button type="button" size="sm" variant="outline" disabled={testing || !apiKey.trim()} onClick={test}>{testing ? 'Testing...' : 'Test connection'}</Button>
         <Button type="button" size="sm" variant="ghost" onClick={clear}>Clear key</Button>
       </div>
-      <p className="text-xs text-[#64748B]">Status is also shown on the <Link href="/dashboard" className="underline underline-offset-4">dashboard</Link>. When generation falls back, the UI says so explicitly — fallback output is never presented as real AI.</p>
+      <p className="text-xs text-[#64748B]">Status is also shown on the <Link href="/dashboard" className="underline underline-offset-4">dashboard</Link>. When generation falls back, the UI says so explicitly  fallback output is never presented as real AI.</p>
     </form>
   )
 }

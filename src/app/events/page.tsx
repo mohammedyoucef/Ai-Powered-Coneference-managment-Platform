@@ -57,7 +57,7 @@ export default function EventsDirectoryPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filtered.map((e) => (
           <article key={e.id} className="flex flex-col rounded-lg border bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div className="h-40 bg-gradient-to-br from-[#4F46E5] to-violet-600 relative">
+            <div className="aspect-video bg-gradient-to-br from-[#4F46E5] to-violet-600 relative">
               {e.branding?.coverImageUrl || e.heroImage ? (
                 <img
                   src={e.branding?.coverImageUrl || e.heroImage}

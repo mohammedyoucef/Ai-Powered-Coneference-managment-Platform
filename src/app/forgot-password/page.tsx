@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
             </p>
             {result.devResetPath ? (
               <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                <p className="font-medium">Local development only — this reset link was NOT emailed to you.</p>
+                <p className="font-medium">Local development only  this reset link was NOT emailed to you.</p>
                 <p className="mt-1">Email is not configured on this local instance, so no message was sent. Use this link only on your own development machine:</p>
                 <p className="mt-2">
                   <Link href={result.devResetPath} className="font-medium text-[#4F46E5] underline underline-offset-4">Open password reset link (local dev only)</Link>
